@@ -103,23 +103,4 @@ class DailyNews extends StatelessWidget {
       ),
     );
   }
-
-  double _calculateTextHeight(
-      BuildContext context, ArticleEntity article, BoxConstraints constraints) {
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: '${article.title}\n${article.description}',
-        // Combine title and description
-        style:
-            Theme.of(context).textTheme.headline6, // Assuming headline6 style
-      ),
-      maxLines: 5, // Set a high maxLines for accurate height calculation
-      textDirection: TextDirection.ltr,
-    );
-    textPainter.layout(
-        minWidth: 0, maxWidth: constraints.maxWidth / 3); // Layout for width
-
-    // Use layout height for combined text
-    return textPainter.height;
-  }
 }

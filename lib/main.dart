@@ -1,14 +1,21 @@
+import 'package:clean_arch_flutter/config/theme/app_themes.dart';
+import 'package:clean_arch_flutter/feature/daily_news/domain/entities/article.dart';
+import 'package:clean_arch_flutter/feature/home/presentation/bloc/home_data/local/local_home_bloc.dart';
+import 'package:clean_arch_flutter/feature/home/presentation/bloc/home_data/local/local_home_event.dart';
+import 'package:clean_arch_flutter/injection_container.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:clean_arch_flutter/config/theme/app_themes.dart';
-import 'package:clean_arch_flutter/feature/daily_news/presentation/bloc/article/remote/remote_article_bloc.dart';
-import 'package:clean_arch_flutter/feature/daily_news/presentation/bloc/article/remote/remote_article_event.dart';
-import 'package:clean_arch_flutter/feature/daily_news/presentation/pages/home/daily_news.dart';
-import 'package:clean_arch_flutter/injection_container.dart';
+import 'package:google_nav_bar/google_nav_bar.dart';
+
+import '../feature/home/presentation/bloc/home_data/local/local_home_state.dart';
 
 Future<void> main() async {
   await initializeDependencies();
-  runApp(const MyApp());
+  runApp(BlocProvider<LocalHomeDataBloc>(
+    create: (context) => sl()..add(const GetHomeData()),
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -17,100 +24,223 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<RemoteArticlesBloc>(
-        create: (context) => sl()..add(const GetArticles()),
-        child: MaterialApp(
-          title: 'Flutter Demo',
-          theme: theme(),
-          home: const DailyNews(),
-        ));
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: theme(),
+      home: const HomePage(),
+    );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    sl.get<LocalHomeDataBloc>().add(const GetDailyNews());
   }
+
+  bool _isUserLoggedIn = false; // Initial state for user login flag
+  int _selectedIndex = 0; // Keeps track of the selected item
+  final List<Widget> _screens = [
+    const DailyNews(), // Your first screen widget
+    SecondScreen(), // Your second screen widget
+    ThirdScreen(), // Your third screen widget
+    FourthScreen()
+  ];
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+    return BlocListener<LocalHomeDataBloc, LocalHomeDataState>(
+      listener: (context, state) {
+        if (state is LocalHomeDataLoadingDone) {
+          final homeData = state.homeDataEntity;
+          _isUserLoggedIn =
+              homeData?.userId != null && homeData?.userName != null;
+          setState(() {}); // Update state to trigger UI rebuild
+        }
+      },
+      child: Scaffold(
+        body: _screens[_selectedIndex],
+        bottomNavigationBar: Container(
+          color: Colors.black,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: GNav(
+              backgroundColor: Colors.black,
+              color: Colors.white,
+              activeColor: Colors.white,
+              hoverColor: Colors.white,
+              tabBackgroundColor: Colors.grey.shade800,
+              padding: const EdgeInsets.all(16),
+              gap: 8,
+              tabs: [
+                const GButton(
+                    icon: Icons.newspaper,
+                    text: "News",
+                    textColor: Colors.white),
+                const GButton(
+                    icon: Icons.search,
+                    text: "Search",
+                    textColor: Colors.white),
+                if (_isUserLoggedIn)
+                  const GButton(
+                      icon: Icons.bookmark,
+                      text: "Bookmarks",
+                      textColor: Colors.white),
+                const GButton(
+                    icon: Icons.person,
+                    text: "Profile",
+                    textColor: Colors.white),
+              ],
+              selectedIndex: _selectedIndex,
+              onTabChange: (index) => setState(() => _selectedIndex = index),
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+          ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+}
+
+class DailyNews extends StatelessWidget {
+  const DailyNews({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: _buildAppBar(),
+      body: _buildBody(),
+    );
+  }
+
+  _buildAppBar() {
+    return AppBar(
+        title: const Text('Daily News', style: TextStyle(color: Colors.black)));
+  }
+
+  _buildBody() {
+    return BlocBuilder<LocalHomeDataBloc, LocalHomeDataState>(
+        builder: (_, state) {
+      if (state is RemoteArticlesLoading) {
+        return const Center(
+          child: CupertinoActivityIndicator(),
+        );
+      }
+      if (state is RemoteArticlesError) {
+        return const Center(
+          child: Icon(Icons.refresh),
+        );
+      }
+      if (state is RemoteDailyNewsLoadingDone) {
+        final articles = state.articles!;
+        return ListView.separated(
+            itemCount: state.articles!.length,
+            itemBuilder: (context, index) {
+              final article = articles[index];
+              return _buildNewsItem(article, context);
+            },
+            separatorBuilder: (context, index) => const Divider());
+      }
+      return const SizedBox();
+    });
+  }
+
+  Widget _buildNewsItem(ArticleEntity article, BuildContext context) {
+    double imageHeight = ((16.0 * 3) + (12 * 2) + 35);
+    double imageWidth = MediaQuery.of(context).size.width / 3;
+    String imageURL = '${article.urlToImage}';
+    print('URL : $imageURL');
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      margin: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start, // Align top for image
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8.0),
+            child: SizedBox(
+              width: imageWidth,
+              height: imageHeight, // Adjust height as needed
+              child: FadeInImage.assetNetwork(
+                placeholder: 'assets/images/placeholder.png',
+                // Placeholder image
+                image: imageURL ?? '',
+                // Handle null image URLs
+                fit: BoxFit.cover, // Cover the container
+              ),
+            ),
+          ),
+          const SizedBox(width: 16.0), // Spacing between image and text
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  article.title ?? '',
+                  maxLines: 3,
+                  // Limit to 3 lines
+                  overflow: TextOverflow.ellipsis,
+                  // Handle overflow with ellipsis
+                  style: const TextStyle(
+                      fontSize: 16.0, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 5.0),
+                // Spacing between title and description
+                Text(
+                  article.description ?? '',
+                  maxLines: 2, // Limit to 2 lines
+                  overflow:
+                      TextOverflow.ellipsis, // Handle overflow with ellipsis
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Text('This is the Home Screen'),
+    );
+  }
+}
+
+class SecondScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Text('This is the Second Screen'),
+    );
+  }
+}
+
+class ThirdScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Text('This is the Third Screen'),
+    );
+  }
+}
+
+class FourthScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Text('This is the Fourth Screen'),
     );
   }
 }
