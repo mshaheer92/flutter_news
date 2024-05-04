@@ -1,10 +1,11 @@
 import 'package:clean_arch_flutter/feature/daily_news/domain/entities/article.dart';
-import 'package:clean_arch_flutter/feature/daily_news_detailed/presentation/detailed_news.dart';
+import 'package:clean_arch_flutter/feature/daily_news_detailed/presentation/pages/detailed_news.dart';
 import 'package:clean_arch_flutter/feature/home/presentation/bloc/home_data/local/local_home_bloc.dart';
 import 'package:clean_arch_flutter/feature/home/presentation/bloc/home_data/local/local_home_state.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class DailyNews extends StatelessWidget {
   const DailyNews({super.key});
@@ -24,7 +25,7 @@ class DailyNews extends StatelessWidget {
 
   _buildBody() {
     return BlocBuilder<LocalHomeDataBloc, LocalHomeDataState>(
-        builder: (_, state) {
+        builder: (buildContext, state) {
       if (state is RemoteArticlesLoading) {
         return const Center(
           child: CupertinoActivityIndicator(),
@@ -43,12 +44,7 @@ class DailyNews extends StatelessWidget {
               final article = articles[index];
               return GestureDetector(
                 onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => DetailedNewsPage(
-                                article: article,
-                              )));
+                  context.go('/details', extra: article);
                 },
                 child: _buildNewsItem(article, context),
               );

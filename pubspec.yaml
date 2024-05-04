@@ -66,6 +66,9 @@ dependencies:
   # flutter secure storage
   flutter_secure_storage: ^9.0.0
 
+  # navigation
+  go_router: ^14.0.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

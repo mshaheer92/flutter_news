@@ -34,8 +34,16 @@ class DetailedNewsPage extends StatelessWidget {
                     fontSize: 16.0, fontStyle: FontStyle.italic),
               ),
               const SizedBox(height: 16.0),
-              if (article.urlToImage != null)
-                Image.network(article.urlToImage!),
+              FadeInImage.assetNetwork(
+                placeholder: 'assets/images/placeholder.png',
+                image: article.urlToImage ?? '',
+                fit: BoxFit.cover,
+              ),
+              const SizedBox(height: 16.0),
+              Text(
+                article.content!,
+                style: const TextStyle(fontSize: 16.0),
+              ),
             ],
           ),
         ),

@@ -34,6 +34,7 @@ class LocalHomeDataBloc extends Bloc<LocalHomeDataEvent, LocalHomeDataState> {
     emit(const RemoteArticlesLoading());
     final dataState = await _getArticlesUseCase();
     if (dataState is DataSuccess && dataState.data!.isNotEmpty) {
+      // print('success ${dataState.data}');
       emit(RemoteDailyNewsLoadingDone(dataState.data!));
     }
     if (dataState is DataFailed) {

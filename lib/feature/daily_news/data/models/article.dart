@@ -21,6 +21,6 @@ class ArticleModel extends ArticleEntity {
         url: map['url'] ?? "",
         urlToImage: map['urlToImage'] ?? "",
         publishedAt: map['publishedAt'] ?? "",
-        content: map[' content'] ?? "");
+        content: map['content'] ?? "");
   }
 }

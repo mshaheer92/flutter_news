@@ -1,10 +1,13 @@
 import 'package:clean_arch_flutter/config/theme/app_themes.dart';
+import 'package:clean_arch_flutter/feature/daily_news/domain/entities/article.dart';
+import 'package:clean_arch_flutter/feature/daily_news_detailed/presentation/pages/detailed_news.dart';
 import 'package:clean_arch_flutter/feature/home/presentation/bloc/home_data/local/local_home_bloc.dart';
 import 'package:clean_arch_flutter/feature/home/presentation/bloc/home_data/local/local_home_event.dart';
 import 'package:clean_arch_flutter/feature/home/presentation/pages/daily_news.dart';
 import 'package:clean_arch_flutter/injection_container.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 
 import '../feature/home/presentation/bloc/home_data/local/local_home_state.dart';
@@ -17,16 +20,48 @@ Future<void> main() async {
   ));
 }
 
+final GoRouter _router = GoRouter(
+  routes: <RouteBase>[
+    GoRoute(
+      path: '/',
+      builder: (BuildContext context, GoRouterState state) {
+        return const HomePage();
+      },
+      routes: <RouteBase>[
+        GoRoute(
+            path: 'details',
+            pageBuilder: (context, state) {
+              final ArticleEntity article = state.extra as ArticleEntity;
+              return CustomTransitionPage(
+                  child: DetailedNewsPage(article: article),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                    // Use a Tween to define the sliding effect
+                    final offsetAnimation = Tween<Offset>(
+                      begin: const Offset(1.0, 0.0), // Start from the right
+                      end: Offset.zero,
+                    ).animate(animation);
+                    return SlideTransition(
+                      position: offsetAnimation,
+                      child: child,
+                    );
+                  });
+            }),
+      ],
+    ),
+  ],
+);
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Flutter Demo',
       theme: theme(),
-      home: const HomePage(),
+      routerConfig: _router,
     );
   }
 }
