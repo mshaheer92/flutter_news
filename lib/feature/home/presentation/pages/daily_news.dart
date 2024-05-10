@@ -71,7 +71,9 @@ class DailyNews extends StatelessWidget {
               width: imageWidth,
               height: imageHeight,
               child: FadeInImage.assetNetwork(
-                placeholder: 'assets/images/placeholder.png',
+                placeholder: 'assets/images/img_placeholder.png',
+                placeholderScale: .3,
+                placeholderFit: BoxFit.scaleDown,
                 image: imageURL ?? '',
                 fit: BoxFit.cover,
               ),
