@@ -1,4 +1,4 @@
-import 'package:clean_arch_flutter/config/theme/app_themes.dart';
+import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:clean_arch_flutter/feature/daily_news/domain/entities/article.dart';
 import 'package:clean_arch_flutter/feature/daily_news_detailed/presentation/pages/detailed_news.dart';
 import 'package:clean_arch_flutter/feature/home/presentation/bloc/home_data/local/local_home_bloc.dart';
@@ -14,9 +14,11 @@ import '../feature/home/presentation/bloc/home_data/local/local_home_state.dart'
 
 Future<void> main() async {
   await initializeDependencies();
+  WidgetsFlutterBinding.ensureInitialized();
+  final themeMode = await AdaptiveTheme.getThemeMode();
   runApp(BlocProvider<LocalHomeDataBloc>(
     create: (context) => sl()..add(const GetHomeData()),
-    child: const MyApp(),
+    child: MyApp(savedThemeMode: themeMode),
   ));
 }
 
@@ -53,16 +55,28 @@ final GoRouter _router = GoRouter(
 );
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final AdaptiveThemeMode? savedThemeMode;
+
+  const MyApp({super.key, this.savedThemeMode});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Flutter Demo',
-      theme: theme(),
-      routerConfig: _router,
-    );
+    return AdaptiveTheme(
+        light: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.light,
+            colorSchemeSeed: Colors.white),
+        dark: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.dark,
+            colorSchemeSeed: Colors.black),
+        initial: savedThemeMode ?? AdaptiveThemeMode.dark,
+        builder: (theme, darkTheme) => MaterialApp.router(
+              title: 'My News',
+              theme: theme,
+              routerConfig: _router,
+            ));
   }
 }
 
@@ -85,8 +99,8 @@ class _HomePageState extends State<HomePage> {
   final List<Widget> _screens = [
     const DailyNews(), // Your first screen widget
     SecondScreen(), // Your second screen widget
-    ThirdScreen(), // Your third screen widget
-    FourthScreen()
+    BookmarksScreen(), // Your third screen widget
+    ProfileScreen()
   ];
 
   @override
@@ -134,7 +148,17 @@ class _HomePageState extends State<HomePage> {
                     textColor: Colors.white),
               ],
               selectedIndex: _selectedIndex,
-              onTabChange: (index) => setState(() => _selectedIndex = index),
+              onTabChange: (index) => setState(() => {
+                    if (_isUserLoggedIn)
+                      _selectedIndex = index
+                    else
+                      {
+                        if (index == 2)
+                          _selectedIndex = index + 1
+                        else
+                          _selectedIndex = index
+                      }
+                  }),
             ),
           ),
         ),
@@ -146,26 +170,77 @@ class _HomePageState extends State<HomePage> {
 class SecondScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('This is the Second Screen'),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Search'),
+      ),
+      body: const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Text('This is the search screen'),
+        ),
+      ),
     );
   }
 }
 
-class ThirdScreen extends StatelessWidget {
+class BookmarksScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('This is the Third Screen'),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Bookmarks'),
+      ),
+      body: const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Text(
+            'This is the Bookmarks screen',
+          ),
+        ),
+      ),
     );
   }
 }
 
-class FourthScreen extends StatelessWidget {
+class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('This is the Fourth Screen'),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Settings'),
+      ),
+      body: ListView(
+        children: [
+          ListTile(
+            title: const Text('Dark Mode'),
+            trailing: Switch(
+              value: AdaptiveTheme.of(context).mode.isDark,
+              onChanged: (value) {
+                if (value) {
+                  AdaptiveTheme.of(context).setDark();
+                } else {
+                  AdaptiveTheme.of(context).setLight();
+                }
+              },
+            ),
+          ),
+          ListTile(
+            title: const Text('Notifications'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              // Navigate to notification settings screen
+            },
+          ),
+          ListTile(
+            title: const Text('Language'),
+            trailing: Icon(Icons.chevron_right),
+            onTap: () {
+              // Navigate to language settings screen
+            },
+          ),
+        ],
+      ),
     );
   }
 }
